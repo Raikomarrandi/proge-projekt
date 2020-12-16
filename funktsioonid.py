@@ -12,10 +12,10 @@ from string import digits
 # järjestatud koha järgi, nt võistlejad{"1"} on võitja
     #info võistlejate kohta listina
     #list[0] on nimi+klubi, list[1] on koguaeg, list[2] on kaotus võitjale
-    #ülejäänud listi elemendid on järjestatult etapid ennikutena (aeg sekundites, koht etapil)
+    #ülejäänud listi elemendid on järjestatult etapid ennikutena (etapiaeg, koguaeg etapi lõpus)
 #võistlejad{"optimaalne"}
     #list[0] on pealkiri, list[1] on parimate etapiaegade summa (optimaalne koguaeg) ja list[2] on vahe võitjaga
-    #list, kus lähevad järjest kõikide etappide võiduajad ennikutena formaadis (etapinr, etapiaeg)
+    #list, kus lähevad järjest kõikide etappide võiduajad ennikutena formaadis (etapiaeg, koguaeg etapi lõpus)
 
 ####
 
@@ -59,10 +59,10 @@ def read_html(url):
                     aeg = int(isik[x][0]+isik[x][1])*60 + int(isik[x][3]+isik[x][4])
                 elif isik[x][1] == ":":
                     aeg = int(isik[x][0])*60 + int(isik[x][2]+isik[x][3])
+                elif isik[x][3] == ":":
+                    aeg = int(isik[x][0]+isik[x][1]+isik[x][2])*60 + int(isik[x][4]+isik[x][5])
                 koht= int(isik[x][-3]+isik[x][-2])
-                võistleja.append((aeg,koht))
-                if koht == 1:
-                    optimaalne.append((len(võistleja)-3,aeg-võistleja[-1][0]))
+                võistleja.append(aeg)
                     
             #aeg ja koht on eraldi
             elif isik[x][-1] == "(":
@@ -72,51 +72,48 @@ def read_html(url):
                     aeg = int(isik[x][0])*60 + int(isik[x][2]+isik[x][3])
                 if isik[x+1][-1] == ")" and len(isik[x+1]) <= 2:
                     koht = int(isik[x+1][0])
-                võistleja.append((aeg,koht))
-                if koht == 1:
-                    if type(võistleja[-2][0]) == int:
-                        optimaalne.append((len(võistleja)-3,aeg-võistleja[-2][0]))
-                    else:
-                        optimaalne.append((len(võistleja)-3,aeg))
+                võistleja.append(aeg)
 
         võistlejad[str(i+1)] = võistleja
-    
-    #arvutab optimaalse koguaja ja vahe võitjaga
-    parim_aeg=0
-    for i in range(3,len(optimaalne)):
-        parim_aeg += int(optimaalne[i][1])
-    võitja_aeg = võistlejad["1"][1]
-    kaotus=0
-    if len(võitja_aeg) == 8:
-        võitja_aeg = (int(võitja_aeg[0] + võitja_aeg[1])*60*60 + int(võitja_aeg[3] + võitja_aeg[4])*60 + int(võitja_aeg[6] + võitja_aeg[7]))
-        kaotus = parim_aeg - võitja_aeg
-    elif len(võitja_aeg) == 6:
-        võitja_aeg = (int(võitja_aeg[0] + võitja_aeg[1])*60 + int(võitja_aeg[3] + võitja_aeg[4]))
-        kaotus = parim_aeg - võitja_aeg
-    elif len(võitja_aeg) == 7:
-        võitja_aeg = (int(võitja_aeg[0])*60*60 + int(võitja_aeg[2] + võitja_aeg[3])*60 + int(võitja_aeg[5] + võitja_aeg[6]))
-        kaotus = parim_aeg - võitja_aeg
-        
-    võistlejad["optimaalne"] = ["Optimaalne",parim_aeg,kaotus] + sorted(optimaalne)
-    
+     
     #arvutab koguaja ja kaotuse võistlejatel
+    võitja_aeg = võistlejad["1"][-1]
     võistlejad["1"][1] = võitja_aeg
     võistlejad["1"][2] = 0
     for i in range(2,len(võistlejad)):
         try:
-            koguaeg = võistlejad[str(i)][1]
-            if len(koguaeg) == 8:
-                koguaeg = (int(koguaeg[0] + koguaeg[1])*60*60 + int(koguaeg[3] + koguaeg[4])*60 + int(koguaeg[6] + koguaeg[7]))
-                kaotus = võitja_aeg - koguaeg
-            elif len(koguaeg) == 6:
-                koguaeg = (int(koguaeg[0] + koguaeg[1])*60 + int(koguaeg[3] + koguaeg[4]))
-                kaotus = võitja_aeg - koguaeg
-            elif len(koguaeg) == 7:
-                koguaeg = (int(koguaeg[0])*60*60 + int(koguaeg[2] + koguaeg[3])*60 + int(koguaeg[5] + koguaeg[6]))
-                kaotus = võitja_aeg - koguaeg
+            koguaeg = võistlejad[str(i)][-1]
+            kaotus = koguaeg - võitja_aeg
             võistlejad[str(i)][1] = koguaeg
             võistlejad[str(i)][2] = kaotus
         except:
-            pass
-    
+            koguaeg= "DNF"
+            kaotus = "Puudub"
+        
+    #lisab võistlejatele mittekommutatiivsed etapiajad
+    for i in võistlejad:
+        if i != "optimaalne":
+            for el in range(len(võistlejad[i])-4):
+                võistlejad[i][-el-1] = (võistlejad[i][-el-1], võistlejad[i][-el-1] - võistlejad[i][-el-2])
+            try:
+                võistlejad[i][3] = (võistlejad[i][3],võistlejad[i][3])
+            except:
+                pass
+    #leiab iga etapi parima (optimaalse) aja
+    opt_aeg = 0
+    for etapp in range(3,len(võistlejad["1"])):
+        etapiajad=[]
+        for i in võistlejad:
+            #print(võistlejad[i][etapp])
+            try:
+                etapiajad.append(võistlejad[i][etapp][1])
+            except:
+                pass
+        opt_aeg += min(etapiajad)
+        optimaalne.append((opt_aeg,min(etapiajad)))
+    kaotus = opt_aeg - võitja_aeg
+    võistlejad["optimaalne"] = ["Optimaalne",opt_aeg,kaotus] + optimaalne
+          
     return võistlejad
+#test = read_html("Tulemused.html")["2"]
+#print(test)
