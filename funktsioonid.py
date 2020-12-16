@@ -115,5 +115,3 @@ def read_html(url):
     võistlejad["optimaalne"] = ["Optimaalne",opt_aeg,kaotus] + optimaalne
           
     return võistlejad
-#test = read_html("Tulemused.html")["2"]
-#print(test)
