@@ -1,4 +1,4 @@
-import pandas as pd
+import matplotlib.pyplot as plt 
 import numpy as np
 import math
 
@@ -6,7 +6,7 @@ import math
 #Siis see programm leiab punktid ja aja optimaalsest sõnastikust
 #Järgmisena programm küsib kasutajalt mitut inimest soovib graafikul näha
 #kui see on väiksem 1 küsib uuesti kasutajalt
-#Seejärel tuleb joongraafik ja mdea kas see üldse vastab su ootustele xd
+#Seejärel tuleb joongraafik, kus opt aeg-roheline/sinine ja inimese jooks-punane/lilla
 
 #see teeb int sekundid minutiteks sõnena
 def stom(aeg):
@@ -28,35 +28,53 @@ def graafikud(sõnastik):
     inimene = sõnastik[koht]
     optimaalne = sõnastik["optimaalne"]
     
+    
     print(inimene[0],"\nKoguaeg: "+stom(inimene[1])+"\nKaotus võitjale: "+
           stom(inimene[2]))
     print("etapiaeg\t\tparim etapiaeg")
     for i in range(3,len(inimene)):
         print(str(i-2)+". etapp: "+str(stom(inimene[i][1]))+" \t"+str(stom(optimaalne[i][1]))+"\tkaotus: "+str(inimene[i][1]-optimaalne[i][1])+" sekundit.")
     
-    #äkki läheb vaja graafiku tegemisel, sest i have no idea
-    """
+    z = 1
     punktid = []
-    aeg = []
+    opt = []
     inimene_aeg = []
     for i in range(3,len(optimaalne)):
-        punktid += [optimaalne[i][0]]
-        aeg += [optimaalne[i][1]]
+        opt += [optimaalne[i][0]]
         inimene_aeg += [inimene[i][0]]
-    """
+        punktid += [z]
+        z += 1
+
+
     
-    inimesed = int(input("Sisesta palju inimesi soovite graafikule: "))   
+    """inimesed = int(input("Sisesta palju inimesi soovite graafikule: "))"""   
     
-    while inimesed < 1:
+    """while inimesed < 1:
         print("Ei saa leida")
-        inimesed = int(input("Sisesta palju inimesi soovite graafikule: "))
+        inimesed = int(input("Sisesta palju inimesi soovite graafikule: "))"""
     
-    if inimesed == 1:
-        üks_inimene = inimene_aeg
-               
+    """if inimesed == 1:"""
+    jooks = inimene_aeg
+                  
+    #esimene joon
     
-    """df = pd.DataFrame(np.random.randn(50, 4), 
-            index=pd.date_range('1/1/2000', periods=50), columns=list('ABCD'))
-    df = df.cumsum()
-    df.plot(style='.-', markevery=5)"""
+    y = opt
+    x = punktid
+
+    plt.plot(x, y, color='green', linestyle='dashed', linewidth = 1, 
+             marker='o', markerfacecolor='blue', markersize=9)
     
+    #teine joon
+    
+    y2 = jooks
+    x2 = punktid
+    
+    plt.plot(x2, y2, color='red', linestyle='dashed', linewidth = 1, 
+             marker='o', markerfacecolor='purple', markersize=9)
+ 
+    plt.ylim(0,7000) 
+    plt.xlim(0,len(x)) 
+    plt.xlabel('etapid') 
+    plt.ylabel('aeg sekundites') 
+    plt.title('Võistluse kulg') 
+    plt.show()
